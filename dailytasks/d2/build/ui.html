@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        td,th {
+            border: double;
+        }
+    </style>
+    <script src="./../logic.js"></script>
+    <script src="./../stringManipulation.js"></script>
+    
+    <script>
+        window.onload=function(){
+            var logic = new appLogic();
+
+            var options = '';
+            for(var i=0;i<logic.categories.length;i++){
+                options+= '<option value="' + logic.categories[i] +'">'+ logic.categories[i] +'</option>'
+            }
+
+            document.getElementById('categoryname').innerHTML = options;
+
+
+            var products = logic.getProducts();
+             
+
+            generateTable(products);
+
+            function generateTable(products){
+
+                var headers;
+                // read the 0th record fro the array
+                var prd = products[0];
+                var columns = [];
+                
+                // read all keys of 0th index
+                //for(var c in prd){
+                //    columns.push(c);
+               // }
+
+               columns = Object.keys(prd);
+               var row = '<tr>';
+                console.log(columns)
+                headers=''
+               for(var c in columns){
+                  
+                headers+= '<th>'+ columns[c]+'</th>';
+               }
+               row+= headers + '</tr>';
+
+               document.getElementById('thead').innerHTML = row;
+
+                var tr = ''
+                for(var r=0; r<products.length;r++){
+                    tr+='<tr>'
+                    for (temp=0; temp<columns.length; temp++){
+                        
+                        tr+='<td>'+ products[r][columns[temp]]+'</td>';
+                        }
+                    tr+='<tr>'
+                }
+
+                document.getElementById('tbody').innerHTML = tr;
+            }
+
+            document.getElementById('clear').addEventListener('click', function(){
+                var inputs = document.getElementsByClassName('c1');
+                for(var i in inputs) {
+                    inputs[i].value = '';
+                }
+                document.getElementById('save').value = 'Save';
+                document.getElementById("save").disabled = false;
+                document.getElementById('dvValidations').innerHTML = '';
+            },false);
+
+            document.getElementById('save').addEventListener('click', function(){
+                // define an object literal
+                var prd = {};
+                prd.ProductId = document.getElementById('productid').value; 
+                prd.ProductName = document.getElementById('productname').value; 
+                prd.CategoryName = document.getElementById('categoryname').value; 
+                prd.Price = document.getElementById('price').value; 
+                if (this.value == 'Save'){
+                    products = logic.addProduct(prd);
+                }
+                else if (this.value == 'Update'){
+                    products = logic.updateProduct(prd);
+                }
+                generateTable(products);
+            },false);
+
+            document.getElementById('productid').addEventListener('change',function(){
+                
+                var id = parseInt(this.value);
+                if(id < 0) {
+                    this.style.backgroundColor = 'red';
+                    document.getElementById('dvValidations').innerHTML = 'ProductId cannot be -ve';
+                } 
+                else if (id > 0) {
+                    this.style.backgroundColor = null;
+                    document.getElementById('dvValidations').innerHTML =''
+
+                    for (temp=0; temp<products.length; temp++){
+                        if(id==products[temp].ProductId){
+                            document.getElementById('productname').value = products[temp].ProductName;
+                            document.getElementById('categoryname').value = products[temp].CategoryName;
+                            document.getElementById('price').value = products[temp].Price;
+                            document.getElementById('save').value = 'Update';
+                            break
+                        }
+                        else{
+                            document.getElementById('productname').value ='';
+                            document.getElementById('categoryname').value = '';
+                            document.getElementById('price').value ='';
+                            document.getElementById('save').value = 'Save'
+                        }
+                    }
+
+                }
+            },false)
+
+            document.getElementById('price').addEventListener('change', function(){
+                if (parseInt(document.getElementById('price').value) < 0){
+                        document.getElementById("save").disabled = true;
+                        document.getElementById('dvValidations').innerHTML = 'Price Entered is in -ve';
+                    }
+                else{
+                    if (document.getElementById('categoryname').value == 'ECT' && parseInt(document.getElementById('price').value) <1000){
+                        document.getElementById("save").disabled = true;
+                        document.getElementById('dvValidations').innerHTML = 'Low Price for ECT';
+                    }
+                    else if (document.getElementById('categoryname').value == 'ECL' && parseInt(document.getElementById('price').value) <20){
+                        document.getElementById("save").disabled = true;
+                        document.getElementById('dvValidations').innerHTML = 'Low Price for ECL';
+                    }
+                    else if (document.getElementById('categoryname').value == 'FOD' && parseInt(document.getElementById('price').value) <10){
+                        document.getElementById("save").disabled = true;
+                        document.getElementById('dvValidations').innerHTML = 'Low Price for FOOD';
+                    }
+                    else{
+                        document.getElementById("save").disabled = false;
+                        document.getElementById('dvValidations').innerHTML = '';
+                    }
+                }
+            },false)
+        }
+    </script>
+</head>
+<body>
+    <h1>The JavaScript Application</h1>
+    <div id="dvValidations" style="color: red;"></div>
+    <table style="border: double;">
+        <tbody>
+            <tr>
+                <td>Product Id</td>
+                <td>
+                    <input type="text" id="productid" class="c1">
+                </td>
+            </tr>
+            <tr>
+                <td>Product Name</td>
+                <td>
+                    <input type="text" id="productname" class="c1">
+                </td>
+            </tr>
+            <tr>
+                <td>Category Name</td>
+                <td>
+                    <select type="text" id="categoryname"></select>
+                </td>
+            </tr>
+            <tr>
+                <td>Price</td>
+                <td>
+                    <input type="text" id="price" class="c1">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="button" value="Clear" id="clear">
+                </td>
+                <td>
+                    <input type="button" value="Save" id="save">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <hr>
+    <table style="border: double;">
+        <thead id="thead">  
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+    <hr>
+    <h2>String Application</h2>
+
+    <textarea id="statementsInput" rows="8" cols="80" placeholder="Enter All your statements"></textarea>
+    <div id="stringResults">
+        
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    
+    <style>
+        table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+                
+                }
+        td, th {
+                border: 1px solid #ada1a1;
+                text-align: left;
+                padding: 8px;
+                }
+        tr:nth-child(even) {
+           
+            background-color: #dddddd;
+            }
+        button {
+            background-color: white;
+            color: black;
+            border: 2px solid #2182bb;
+            border-style:dotted;
+            }
+        button:hover{
+            border: 5px solid #2182bb;
+        }
+        img{
+           position: relative;
+           left: 50%;
+        }
+
+    </style>
+</head>
+<body>
+
+    <table>
+        <thead>
+            <tr>
+                <td>ProductId</td>
+                <td><input type="text" id="ProductId"></td>
+            </tr>
+            <tr>
+                <td>ProductName</td>
+                <td><input type="text" id="ProductName"></td>
+            </tr>
+            <tr>
+                <td>CategoryName</td>
+                <td><input type="text" id="CategoryName"></td>
+            </tr>
+            <tr>
+                <td>Manufacturer</td>
+                <td><input type="text" id="Manufacturer"></td>
+            </tr>
+            <tr>
+                <td>Description</td>
+                <td><input type="text" id="Description"></td>
+            </tr>
+            <tr>
+                <td>BasePrice</td>
+                <td><input type="number" id="BasePrice"></td>
+            </tr>
+            <tr>
+                <td><button id='get_items'>Get Data</button></td>
+                
+                <td>
+                    <select name="" id="selectOption">
+                        <option value="input" selected>Input</option>
+                    </select>
+                    <button id='Update_Input_Delete' value="inp" onclick="clicked()">Input Data</button>
+                </td>
+                
+                
+            </tr>
+        </thead>
+    </table>
+    <br>
+    <hr>
+    <br>
+    <table > 
+        <thead>
+            <tr>
+                <th>
+                    Product Id
+                </th>
+                <th>
+                    Product Name
+                </th>
+                <th>
+                    Category Name
+                </th>
+                <th>
+                    Manufacturer
+                </th>
+                <th>
+                    Description
+                </th>
+                <th>
+                    BasePrice
+                </th>
+            </tr>
+        </thead>
+        
+        <tbody id = 'data'></tbody>
+    </table>
+    <br><br>
+
+    <img src="./805.gif" alt="loading" id="loadingImg" style="display: none;">
+
+    <script type="text/javascript">
+        
+           function clicked(){
+               let response = new Promise(function (resolve, reject){
+                    let req = new XMLHttpRequest();
+
+                    req.onload = function(){
+                        resolve(req.response)
+                    } 
+                    req.onerror = function(){
+                        reject(req.statusText)
+                    }
+
+                    let temp = document.getElementsByTagName('input')
+                    let data = {}
+                    for (x of temp){
+                        data[x.id] = x.value
+                    }
+
+                    req.open('POST', 'http://localhost:5000')
+                    req.setRequestHeader("Content-Type", "application/json");
+                    req.send(JSON.stringify(data))
+               })
+
+               response.then(function (respData){
+                    respData = JSON.parse(respData)
+                    let th = ``
+                    for (x of respData){
+                        th+= `<tr>`
+                        Object.keys(x).forEach((v,i)=>{
+                            th += `<td>`+x[v]+`</td>`
+                        })
+                        th+= `</tr>`
+                    }
+                    document.getElementById('data').innerHTML = th
+               }).catch(function(error){
+                    console.log(error)
+               })
+                
+           }
+        
+           document.getElementById('get_items').addEventListener('click', function (){
+               var req = new Promise(function(resolve, reject){
+                   var res = new XMLHttpRequest();
+                   res.onload = function(){
+                        resolve(res.response)
+                   }
+                   res.onerror = function(){
+                        reject(res.statusText)
+                   }
+                   res.open('GET', 'http://localhost:5000/getData')
+                   res.send()
+               })
+
+               req.then(function(respData){
+                   console.log(respData)
+                    respData = JSON.parse(respData)
+                    let th = ``
+                    for (x of respData){
+                        th+= `<tr>`
+                        Object.keys(x).forEach((v,i)=>{
+                            th += `<td>`+x[v]+`</td>`
+                        })
+                        th+= `</tr>`
+                    }
+                    document.getElementById('data').innerHTML = th
+               }).catch(function(error){
+                    console.log(error)
+               })
+           })
+
+    </script>
+</body>
+</html>
