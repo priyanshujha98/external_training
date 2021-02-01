@@ -1,17 +1,17 @@
 var DataTypes = require("sequelize").DataTypes;
 var _department = require("./department");
-var _employee = require("./employee");
+var _login = require("./login");
 
 function initModels(sequelize) {
   var department = _department(sequelize, DataTypes);
-  var employee = _employee(sequelize, DataTypes);
+  var login = _login(sequelize, DataTypes);
 
-  employee.belongsTo(department, { foreignKey: "DeptNo"});
-  department.hasMany(employee, { foreignKey: "DeptNo"});
+  login.belongsTo(employee, { foreignKey: "EmpNo"});
+  employee.hasMany(login, { foreignKey: "EmpNo"});
 
   return {
     department,
-    employee,
+    login,
   };
 }
 module.exports = initModels;

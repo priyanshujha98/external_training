@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
+.form-control{
+    
+    font-size: 15px;
+    display: block;
+    padding: 10px;
+    margin: 10px;
+    margin-left: 30px;
+    margin-top: 15px;
+    width: 80%;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+input.form-control {
+    
+    animation: alternate
+}
+
+.btnDanger{
+    background-color: rgba(196, 28, 42, 0.8);
+    position: relative;
+    left: 30px;
+    margin: 50px 5px 0;
+}
+.btnDanger:hover{
+    background-color:white;
+    border-color: red;
+    border-style: solid;
+    
+}
+.btnSucess{
+    background-color: #90eca6;
+    position: relative;
+    left: 30px;
+    margin: 50px 5px 0;
+}
+.btnSucess:hover{
+    background-color:white;
+    border-color: #90eca6;
+    border-style: solid;
+    
+}
+.btnWarning{
+    background-color: #fff3cd;
+    position: relative;
+    left: 30px;
+    margin: 50px 5px 0;
+}
+.btnWarning:hover{
+    background-color:white;
+    border-color: #fff3cd;
+    border-style: solid;
+    
+}
+.alertDanger{
+    background-color: #f8d7da;
+    display:block;
+    text-align: center;
+    
+}
+
+.body-content a{
+    text-decoration: none;
+    text-align: center;
+    display: block;
+    font-size: 15px;
+}

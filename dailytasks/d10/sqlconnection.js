@@ -9,6 +9,11 @@ let instance = express();
 instance.use(bodyParser.json());
 instance.use(bodyParser.urlencoded({ extended: false }));
 instance.use(cors());
+const jwt = require('jsonwebtoken')
+
+const jwtsettings = {
+    jwtsecret:'my_super_secret_key'
+}
 
 const sequelize = new Sequelize('company','root','ticiom4pj',{
     host:'localhost',
@@ -21,11 +26,15 @@ const sequelize = new Sequelize('company','root','ticiom4pj',{
     },
     define:{
         timestamps:false
-    }
+    },
+
 
 })
 
 const dept = require(path.join(__dirname, './models/department.js'))(sequelize, Sequelize.DataTypes);//gotta ask what is this ??
+
+const authentication = require(path.join(__dirname,'./models/login.js'))(sequelize,Sequelize.DataTypes)
+
 
 instance.get('/dept',(request,response)=>{
     sequelize.sync({
@@ -46,7 +55,7 @@ instance.get('/dept',(request,response)=>{
         response.status(200).send(data)
         response.end()
     }).catch((err)=>{
-        response.status(500).send('Someting bad happened')
+        response.status(500).send('Someting bad happened'+String(err))
         response.end()
     })
 
@@ -58,7 +67,7 @@ instance.get('/dept/:id',(request,response)=>{
         force:false
     }).then(()=>{
         let r= dept.findAll({
-            where:{DeptNo:{[Op.gte]:id}}
+            where:{DeptNo:{[Op.eq]:id}}
         })
         console.log(r)
         // let r = sequelize.query('select * from department') gives me same data 2 times, gotta find out why ?
@@ -151,7 +160,7 @@ instance.get("/emp",(request,response)=>{
     sequelize.sync({
         force:false
     }).then(async()=>{
-        let r = await sequelize.query('select * from employee left join department on employee.DeptNo=department.DeptNo',{ type: Sequelize.QueryTypes.SELECT })
+        let r = await sequelize.query('select * from employee inner join department on employee.DeptNo=department.DeptNo',{ type: Sequelize.QueryTypes.SELECT })
         return r
     }).then((resp)=>{
         console.log(resp)
@@ -163,6 +172,25 @@ instance.get("/emp",(request,response)=>{
     })
 
 })
+
+instance.get("/search/dept/:id",(request,response)=>{
+    let id = parseInt(request.params.id)
+    sequelize.sync({
+        force:false
+    }).then(async()=>{
+        let r = await sequelize.query(`select * from employee inner join department on employee.DeptNo=department.DeptNo where department.DeptNo=${id}`,{ type: Sequelize.QueryTypes.SELECT })
+        return r
+    }).then((resp)=>{
+        console.log(resp)
+        response.status(200).send(resp)
+        response.end()
+    }).catch((err)=>{
+        response.status(504).send(err)
+        response.end()
+    })
+
+})
+
 
 instance.get("/emp/:id",(request,response)=>{
     let id = request.params.id
@@ -180,9 +208,16 @@ instance.get("/emp/:id",(request,response)=>{
 })
 instance.post("/emp",(request,response)=>{
     let data = {}
-    Object.keys(request.body).forEach((v,i)=>{
-        data[v] = request.body[v]
-    })
+    data.EmpNo = request.body.EmpNo
+    data.EmpName = request.body.EmpName
+    data.EmpSalary = request.body.EmpSalary
+    data.DeptNo = request.body.DeptNo
+
+    let data2={}
+    data2.EmpNo = request.body.EmpNo
+    data2.email = request.body.email
+    data2.pass = request.body.pass
+
     console.log(data)
     sequelize.sync({
         force:false
@@ -190,7 +225,9 @@ instance.post("/emp",(request,response)=>{
         return dept.findOne({where:{DeptNo:data.DeptNo}})
     }).then((resp)=>{
         if (resp!=null){
-            return emp.create(data)
+            let r= emp.create(data)
+            let a = authentication.create(data2)
+            return r
         }
         else{
             throw new Error('Foriegn Key error')
@@ -198,6 +235,22 @@ instance.post("/emp",(request,response)=>{
     })
     .then((resp2)=>{
         response.status(200).send(resp2)
+        response.end()
+    }).catch((err)=>{
+        response.status(500).send({status:500, msg:String(err)})
+        response.end()
+    })
+})
+
+instance.post("/search",(request,response)=>{
+    let search = request.body.searchString
+    sequelize.sync({
+        force:false
+    }).then(()=>{
+        let r = sequelize.query(`select * from employee where EmpNo Like'%${search}%' or EmpName Like '%${search}%' or DeptNo like '%${search}%' or EmpSalary like '%${search}%'`,{ type: Sequelize.QueryTypes.SELECT })
+        return r
+    }).then((resp)=>{
+        response.status(200).send(resp)
         response.end()
     }).catch((err)=>{
         response.status(500).send({status:500, msg:String(err)})
@@ -280,6 +333,46 @@ instance.get('/emp/tax/:id',(request,response)=>{
         response.status(500).send({status:500, msg:String(err)})
         response.end()
     })
+})
+
+
+instance.post('/email/:email',(request,response)=>{
+    let tempEmail = request.params.email
+    sequelize.sync({
+        force:false
+    }).then(()=>{
+        return authentication.findOne({where:{email:tempEmail}})
+    }).then((resp)=>{
+        if (resp){
+            response.status(200).send(false)
+        }else{
+            response.status(200).send(true)
+        }
+    }).catch((err)=>{
+        response.status(500).send(String(err))
+    })
+})
+
+instance.post('/verify',(request,response)=>{
+    let data = {email:request.body.email,pass:request.body.pass}
+    sequelize.sync({
+        force:false
+    }).then(()=>{
+        return authentication.findOne({where:{email:data.email,pass:data.pass}})
+    }).then((resp)=>{
+        if(resp){
+
+            resp = {email:resp.email,pass:resp.pass,EmpNo:resp.EmpNo,verified:true}
+        }else{
+            resp = {verified:false}
+        }
+        
+        response.status(200).send(JSON.stringify(resp))
+    }).catch((err)=>{
+        console.log(err)
+        response.status(500).send(JSON.stringify(err))
+    })
+    
 })
 
 instance.listen(5000)
